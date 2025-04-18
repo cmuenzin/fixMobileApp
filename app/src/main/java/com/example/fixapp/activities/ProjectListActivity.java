@@ -10,6 +10,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -29,8 +30,8 @@ import java.text.DateFormat;
 import java.util.List;
 
 public class ProjectListActivity extends AppCompatActivity {
-    private static final int REQUEST_IMAGE_CAPTURE    = 1;
-    private static final int REQUEST_CAMERA_PERMISSION= 100;
+    private static final int REQUEST_IMAGE_CAPTURE     = 1;
+    private static final int REQUEST_CAMERA_PERMISSION = 100;
 
     private RecyclerView rvProjects;
     private FloatingActionButton fabNew;
@@ -48,11 +49,11 @@ public class ProjectListActivity extends AppCompatActivity {
         dbHelper   = new ProjectsDbHelper(this);
         projects   = dbHelper.getAllProjects();
 
-        // Adapter mit Klick‑Listener zum Öffnen von ChatActivity
+        // Adapter mit Klick‑Listener zum Öffnen von Project
         ProjectAdapter adapter = new ProjectAdapter(
                 this, projects,
                 project -> {
-                    Intent i = new Intent(this, ChatActivity.class);
+                    Intent i = new Intent(this, com.example.fixapp.models.Project.class);
                     i.putExtra("projectId", project.getId());
                     startActivity(i);
                 }
@@ -62,21 +63,30 @@ public class ProjectListActivity extends AppCompatActivity {
         );
         rvProjects.setAdapter(adapter);
 
-        fabNew.setOnClickListener(v -> {
-            // Runtime‑Permission prüfen
-            if (ContextCompat.checkSelfPermission(
-                    this, Manifest.permission.CAMERA)
-                    != PackageManager.PERMISSION_GRANTED) {
+        fabNew.setOnClickListener(v -> showNewProjectDialog());
+    }
 
-                ActivityCompat.requestPermissions(
-                        this,
-                        new String[]{ Manifest.permission.CAMERA },
-                        REQUEST_CAMERA_PERMISSION
-                );
-            } else {
-                dispatchTakePictureIntent();
-            }
-        });
+    /** Zeigt Dialog für Projekt-Erstellung mit Foto oder ohne Foto */
+    private void showNewProjectDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Neues Projekt")
+                .setMessage("Möchtest du ein Foto aufnehmen oder ohne Foto fortfahren?")
+                .setPositiveButton("Foto aufnehmen", (dialog, which) -> {
+                    // Kamera starten
+                    if (ContextCompat.checkSelfPermission(
+                            this, Manifest.permission.CAMERA)
+                            != PackageManager.PERMISSION_GRANTED) {
+                        ActivityCompat.requestPermissions(
+                                this,
+                                new String[]{ Manifest.permission.CAMERA },
+                                REQUEST_CAMERA_PERMISSION
+                        );
+                    } else {
+                        dispatchTakePictureIntent();
+                    }
+                })
+                .setNegativeButton("Ohne Foto fortfahren", (dialog, which) -> skipCreateProject())
+                .show();
     }
 
     /** Kamera‑Intent starten */
@@ -85,13 +95,28 @@ public class ProjectListActivity extends AppCompatActivity {
         if (takePic.resolveActivity(getPackageManager()) != null) {
             startActivityForResult(takePic, REQUEST_IMAGE_CAPTURE);
         } else {
-            // Hier Toast ausgeben, wenn keine Kamera‑App gefunden
             Toast.makeText(
                     this,
-                    "Keine Kamera-App gefunden – bitte im AVD Manager Kamera aktivieren oder auf einem echten Gerät testen.",
+                    "Keine Kamera-App gefunden – bitte im AVD Manager Kamera aktivieren oder echtes Gerät nutzen.",
                     Toast.LENGTH_LONG
             ).show();
         }
+    }
+
+    /** Erstellt Projekt ohne Foto und öffnet Project */
+    private void skipCreateProject() {
+        long now = System.currentTimeMillis();
+        String title = "Projekt " + DateFormat.getDateTimeInstance().format(now);
+        long id = dbHelper.addProject(title, now, ""); // kein Thumbnail
+
+        Project newProj = new Project(id, title, now, "");
+        projects.add(0, newProj);
+        rvProjects.getAdapter().notifyItemInserted(0);
+        rvProjects.scrollToPosition(0);
+
+        Intent i = new Intent(this, com.example.fixapp.models.Project.class);
+        i.putExtra("projectId", id);
+        startActivity(i);
     }
 
     /** Permission‑Callback */
@@ -126,7 +151,6 @@ public class ProjectListActivity extends AppCompatActivity {
                 && data != null) {
 
             Bitmap thumbnail = (Bitmap) data.getExtras().get("data");
-            // als JPEG in internal storage speichern
             String filename = "thumb_" + System.currentTimeMillis() + ".jpg";
             File file = new File(getFilesDir(), filename);
             try (FileOutputStream fos = new FileOutputStream(file)) {
@@ -135,21 +159,18 @@ public class ProjectListActivity extends AppCompatActivity {
                 );
 
                 long now = System.currentTimeMillis();
-                String title = "Projekt "
-                        + DateFormat.getDateTimeInstance().format(now);
+                String title = "Projekt " + DateFormat.getDateTimeInstance().format(now);
+                long id = dbHelper.addProject(title, now, file.getAbsolutePath());
 
-                // in DB einfügen
-                long id = dbHelper.addProject(
-                        title, now, file.getAbsolutePath()
-                );
-
-                // in UI einfügen
-                Project newProj = new Project(
-                        id, title, now, file.getAbsolutePath()
-                );
+                Project newProj = new Project(id, title, now, file.getAbsolutePath());
                 projects.add(0, newProj);
                 rvProjects.getAdapter().notifyItemInserted(0);
                 rvProjects.scrollToPosition(0);
+
+                // Chat öffnen nach Foto
+                Intent i = new Intent(this, com.example.fixapp.models.Project.class);
+                i.putExtra("projectId", id);
+                startActivity(i);
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -165,7 +186,6 @@ public class ProjectListActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Liste auffrischen (falls nötig)
         projects.clear();
         projects.addAll(dbHelper.getAllProjects());
         rvProjects.getAdapter().notifyDataSetChanged();
