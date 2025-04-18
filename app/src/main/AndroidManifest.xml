@@ -21,7 +21,7 @@
 
         <!-- Chat-Activity (ohne Launcher-Intent) -->
         <activity
-            android:name=".activities.ChatActivity"
+            android:name=".activities.Project"
             android:exported="false" />
 
         <!-- ProjectList-Activity als App-Startpunkt (Launcher) -->
