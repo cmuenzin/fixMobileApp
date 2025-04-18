@@ -71,10 +71,6 @@ Beschreibung der Architektur (Activities, Intents, Modelle)
 
 Reflexion der App-Entscheidungen anhand der Kriterien aus der Veranstaltung (z. B. Sinnhaftigkeit, Erfolgsfaktoren)
 
-👥 Projektteam
-Max Mustermann
-
-Erika Beispiel
 
 Dozenten: Justin Zeller & Max Ruland
 RH Köln, Wirtschaftsinformatik
