@@ -9,18 +9,22 @@ val BUILD_API_KEY: String by project
 
 android {
     namespace = "com.example.fixapp"
-    compileSdk = 34
+    compileSdk = 35
+
+    buildFeatures {
+        // hier aktivieren wir BuildConfig-Generierung
+        buildConfig = true
+    }
 
     defaultConfig {
         applicationId = "com.example.fixapp"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // so erzeugt Gradle in BuildConfig.BUILD_API_KEY deine URL als String
         buildConfigField("String", "BUILD_API_KEY", "\"$BUILD_API_KEY\"")
     }
 
@@ -33,15 +37,10 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
-    }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
-    buildFeatures {
-        compose = true
     }
 }
 
