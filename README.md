@@ -2,8 +2,7 @@
 
 ## 📱 Projektname: *fixapp*
 
-Dieses Projekt ist Teil der Laborprüfung im Modul *Mobile Systems* an der RFH Köln. Die Anwendung wurde in Java mit Android Studio entwickelt und erfüllt die Anforderungen des Moduls: Mindestens zwei Activities, ein klarer Use-Case sowie eine einfache, funktionale Benutzeroberfläche.
-
+Dieses Projekt ist Teil der Laborprüfung im Modul *Mobile Systems* an der RH Köln. Die Anwendung wurde in Java mit Android Studio entwickelt.
 ---
 
 ## 🧩 Projektstruktur
